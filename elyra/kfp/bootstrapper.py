@@ -256,7 +256,7 @@ class FileOpBase(ABC):
         # add Elyra metadata to 'outputs'
         metadata["outputs"].append(
             {
-                "storage": "inline",
+                "storage type": "inline",
                 "source": f"## Inputs for {self.filepath}\n"
                 f"[{self.input_params['cos-dependencies-archive']}]({bucket_url})",
                 "type": "markdown",
@@ -483,8 +483,16 @@ class PythonFileOp(FileOpBase):
             if self.parameter_pass_method == "env":
                 self.set_parameters_in_env()
 
-            with open(python_script_output, "w") as log_file:
-                subprocess.run(run_args, stdout=log_file, stderr=subprocess.STDOUT, check=True)
+            with open(python_script_output, "w"):
+                print("Processing file:", python_script)
+                try:
+                    result = subprocess.run(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+                    output = result.stdout.decode("utf-8")
+                    logger.info(f"Output: {output}")
+                    logger.info(f"Return code: {result.returncode}")
+                except subprocess.CalledProcessError as e:
+                    logger.error("Output:", e.output.decode("utf-8"))
+                    logger.error("Return code:", e.returncode)
 
             duration = time.time() - t0
             OpUtil.log_operation_info("python script execution completed", duration)
@@ -517,8 +525,16 @@ class RFileOp(FileOpBase):
             if self.parameter_pass_method == "env":
                 self.set_parameters_in_env()
 
-            with open(r_script_output, "w") as log_file:
-                subprocess.run(run_args, stdout=log_file, stderr=subprocess.STDOUT, check=True)
+            with open(r_script_output, "w"):
+                print("Processing file:", r_script)
+                try:
+                    result = subprocess.run(run_args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+                    output = result.stdout.decode("utf-8")
+                    logger.info(f"Output: {output}")
+                    logger.info(f"Return code: {result.returncode}")
+                except subprocess.CalledProcessError as e:
+                    logger.error("Output:", e.output.decode("utf-8"))
+                    logger.error("Return code:", e.returncode)
 
             duration = time.time() - t0
             OpUtil.log_operation_info("R script execution completed", duration)
